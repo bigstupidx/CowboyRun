@@ -5,6 +5,7 @@ public class RiderController : MonoBehaviour {
 
     public GameObject horse;
     public GameObject circle;
+	public float searchRadio = 10f;
 
     private Animator anim;
     private Rigidbody rigidBody;
@@ -16,11 +17,12 @@ public class RiderController : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        anim = GetComponent<Animator>();
-        rigidBody = GetComponent<Rigidbody>();
+        
 	}
     void OnEnable()
     {
+		anim = GetComponent<Animator>();
+		rigidBody = GetComponent<Rigidbody>();
         EasyTouch.On_TouchStart += onTouchDown;
         EasyTouch.On_Swipe += onSwipe;
         EasyTouch.On_Drag += onSwipe;
@@ -40,6 +42,10 @@ public class RiderController : MonoBehaviour {
         if (jumping)
         {
             circle.transform.position = new Vector3( transform.position.x, 0 , transform.position.z);
+			GameObject horse =  searchHrose ();
+			if (horse) {
+				Debug.Log (horse.name);
+			}
         }
 	}
 
@@ -90,10 +96,9 @@ public class RiderController : MonoBehaviour {
             rigidBody.isKinematic = false;
             Vector3 v = transform.forward.normalized;
             transform.rotation = horse.transform.rotation;
-            //rigidBody.AddForce(transform.right + transform.up * 8 + transform.forward*10, ForceMode.Impulse);
             rigidBody.AddForce(transform.up * 8 + horse.transform.forward * 10, ForceMode.Impulse);
-
-            //horse.SetActive(false);
+			horse.GetComponent<RDHorseController> ().onCowboyLeave ();
+			RideRunGameData.Instance ().RemoveHorse (horse);
             Destroy(horse);
         }
     }
@@ -106,12 +111,13 @@ public class RiderController : MonoBehaviour {
             if (!dead)
             {
                 dead = true;
+				jumping = false;
                 anim.SetBool(DeadHash, dead);
             }
         }
     }
 
-    void RideHorse(GameObject horse)
+    public void RideHorse(GameObject horse)
     {
         RDHorseController ctrl = horse.GetComponent<RDHorseController>();
         if (ctrl != null)
@@ -121,8 +127,26 @@ public class RiderController : MonoBehaviour {
             rigidBody.isKinematic = true;
             transform.parent = ctrl.riderParent.transform;
             transform.rotation = Quaternion.Euler(new Vector3(0, -90, -90));
+			if (this.horse) {
+				this.horse.GetComponent<RDHorseController> ().onCowboyLeave ();
+			}
+			this.horse = horse;
+			this.horse.GetComponent<RDHorseController> ().onCowboyRide ();
         }
     }
+
+	GameObject searchHrose(){
+		ArrayList horses = RideRunGameData.Instance ().GetHorses ();
+		foreach (Object obj in horses) {
+			GameObject horse = obj as GameObject;
+			float radio = circle.GetComponent<drawcircle> ().radius;
+			if (Vector3.Distance (circle.transform.position, horse.transform.position) <= radio) {
+				return horse;
+			}
+		}
+		return null;
+	}
+
 
     //void OnCollisionStay(Collision collisionInfo)
     //{

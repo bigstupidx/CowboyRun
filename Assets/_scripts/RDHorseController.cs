@@ -9,6 +9,7 @@ public class RDHorseController : MonoBehaviour {
     public float rotateFactor = 0.5f;
 
     private int RideSpeedHash = Animator.StringToHash("RideSpeed");
+	private bool beenRide = false;
 
 	// Use this for initialization
 	void Start () {
@@ -17,18 +18,15 @@ public class RDHorseController : MonoBehaviour {
 
     void OnEnable()
     {
-        EasyTouch.On_TouchStart += onTouchDown;
-        EasyTouch.On_Swipe += onSwipe;
-        EasyTouch.On_Drag += onSwipe;
-        EasyTouch.On_TouchUp += onTouchUp;
+        
     }
 
     void OnDestory()
     {
-        EasyTouch.On_TouchStart -= onTouchDown;
-        EasyTouch.On_Swipe -= onSwipe;
-        EasyTouch.On_Drag -= onSwipe;
-        EasyTouch.On_TouchUp -= onTouchUp;
+		EasyTouch.On_TouchStart -= onTouchDown;
+		EasyTouch.On_Swipe -= onSwipe;
+		EasyTouch.On_Drag -= onSwipe;
+		EasyTouch.On_TouchUp -= onTouchUp;
     }
 	
 	// Update is called once per frame
@@ -54,4 +52,22 @@ public class RDHorseController : MonoBehaviour {
         //Debug.Log("onTouchUp");
         anim.SetFloat(RideSpeedHash, 0.0f);
     }
+
+	public void onCowboyRide(){
+		beenRide = true;
+		EasyTouch.On_TouchStart += onTouchDown;
+		EasyTouch.On_Swipe += onSwipe;
+		EasyTouch.On_Drag += onSwipe;
+		EasyTouch.On_TouchUp += onTouchUp;
+	}
+
+
+
+	public void onCowboyLeave(){
+		beenRide = false;
+		EasyTouch.On_TouchStart -= onTouchDown;
+		EasyTouch.On_Swipe -= onSwipe;
+		EasyTouch.On_Drag -= onSwipe;
+		EasyTouch.On_TouchUp -= onTouchUp;
+	}
 }
