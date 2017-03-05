@@ -1,31 +1,22 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+
 public class fixedCam : MonoBehaviour {
     public Transform target;  //the target what the camare look for
-    public Vector3 normalDirection = new Vector3(0.5f,0.5f,0.5f);
-    public float distance;
+    public float smooth;
 
-	// Use this for initialization
-	void Start () {
-		
+	private Vector3 offset;
+
+	void Start(){
+		offset = transform.position - target.transform.position;
 	}
 
-	void OnEnable(){
-		
-	}
-
-	void OnDestroy(){
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
+	void LateUpdate () {
         Vector3 targetPos = target.transform.position;
-        Vector3 newPos = new Vector3();
-		newPos = targetPos + normalDirection.normalized * distance;
-        transform.position = newPos;
-		transform.LookAt (target.position);
+		targetPos.y = 0;
+		//transform.position = Vector3.Lerp (transform.position, targetPos + offset, smooth * Time.deltaTime);
+		transform.position = targetPos + offset;
 	}
 
 }

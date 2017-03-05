@@ -7,6 +7,8 @@ TagManager:
   - Terrain
   - Horse
   - Water
+  - TerrainDetecter
+  - Blocks
   layers:
   - Default
   - TransparentFX

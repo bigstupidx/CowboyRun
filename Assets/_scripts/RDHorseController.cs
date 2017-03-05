@@ -4,70 +4,142 @@ using System.Collections;
 public class RDHorseController : MonoBehaviour {
 
     public GameObject riderParent;
+	public int NeighTime = 10;
+	public SkinnedMeshRenderer[] skins;
+	public GameObject HorseCanvasPrefab;
+	[HideInInspector]public drawcircle circle;
 
     private Animator anim;
-    public float rotateFactor = 0.5f;
-
     private int RideSpeedHash = Animator.StringToHash("RideSpeed");
+	private int DeadHash = Animator.StringToHash("dead");
+	private int NeighHash = Animator.StringToHash("Neigh");
 	private bool beenRide = false;
+	private bool run = false;
+	private RiderController riderController;
+	private HorseMovement hm;
+	private bool Angleing = false;
+	private bool beenFound = false;
+	private float AngryTime = 3.5f;
+
+	private GameObject horseCanvas;
+	private Animator horseAnimator;
+
+	[HideInInspector]
+	public bool BeenRide{
+		get{
+			return beenRide;
+		}
+	}
+
+	[HideInInspector]
+	public bool Run{
+		get{
+			return run;
+		}
+		set{
+			run = value;
+			anim.SetFloat (RideSpeedHash, run ? 1.0f : 0.0f);
+		}
+	}
 
 	// Use this for initialization
 	void Start () {
-        anim = GetComponent<Animator>();
+		
 	}
 
-    void OnEnable()
-    {
-        
-    }
-
-    void OnDestory()
-    {
-		EasyTouch.On_TouchStart -= onTouchDown;
-		EasyTouch.On_Swipe -= onSwipe;
-		EasyTouch.On_Drag -= onSwipe;
-		EasyTouch.On_TouchUp -= onTouchUp;
-    }
-	
-	// Update is called once per frame
-	void Update () {
-	
+	void LateUpdate(){
+		if (run && beenRide && !Angleing){
+			Angleing = !Angleing;
+			StartCoroutine (Angry ());
+			StartCoroutine (AngryEffect ());
+		}
+		if (CompareTag("Horse")){
+			float radio = circle.radius;
+			bool flag = false;
+			if (  Vector3.Distance(transform.position, circle.gameObject.transform.position) <= radio ){
+				flag = true;
+			}
+			BeenFound(flag);
+		}
 	}
 
-    void onTouchDown(Gesture gesture)
-    {
-        //Debug.Log("onTouchDown");
-        anim.SetFloat(RideSpeedHash, 1.0f);
-    }
+	void Awake(){
+		anim = GetComponent<Animator>();
+		hm = GetComponent<HorseMovement>();
+	}
 
-    void onSwipe(Gesture gesture)
-    {
-        //Debug.Log("onSwipe");
-        Vector3 rotateVect = transform.rotation.eulerAngles;
-        transform.rotation = Quaternion.Euler(rotateVect + new Vector3(0.0f, gesture.deltaPosition.x * rotateFactor, 0.0f));
-    }
-
-    void onTouchUp(Gesture gesture)
-    {
-        //Debug.Log("onTouchUp");
-        anim.SetFloat(RideSpeedHash, 0.0f);
-    }
-
-	public void onCowboyRide(){
+	public void onCowboyRide(RiderController rc){
 		beenRide = true;
-		EasyTouch.On_TouchStart += onTouchDown;
-		EasyTouch.On_Swipe += onSwipe;
-		EasyTouch.On_Drag += onSwipe;
-		EasyTouch.On_TouchUp += onTouchUp;
+		gameObject.tag = "Player";
+		riderController = rc;
+		hm.OnBeenRide ();
+		BeenFound (false);
 	}
-
 
 
 	public void onCowboyLeave(){
 		beenRide = false;
-		EasyTouch.On_TouchStart -= onTouchDown;
-		EasyTouch.On_Swipe -= onSwipe;
-		EasyTouch.On_Drag -= onSwipe;
-		EasyTouch.On_TouchUp -= onTouchUp;
+		gameObject.tag = "Horse";
+		riderController = null;
+		hm.OnNotBeenRide ();
+	}
+
+	void OnCollisionEnter(Collision collision) {
+		// should die
+		if (beenRide){
+			Debug.Log (collision.gameObject.tag);
+			if (riderController != null && gameObject.CompareTag("Player")){
+				anim.SetBool (DeadHash, true);
+				run = false;
+				riderController.OnHorseBlock();
+				GetComponent<Rigidbody> ().velocity = Vector3.zero;
+			}
+		}
+	}
+
+	IEnumerator Angry(){
+		yield return new WaitForSeconds (NeighTime);
+		if (riderController != null){
+			run = false;
+			anim.SetBool (NeighHash, true);
+			StartCoroutine (TimeToJump ());
+		}
+	}
+
+	IEnumerator AngryEffect(){
+		yield return new WaitForSeconds (NeighTime - AngryTime);
+		if (riderController != null){
+			AddHorseCanvas ();
+			horseAnimator.SetBool (Animator.StringToHash ("found"), false);
+			horseAnimator.SetBool (Animator.StringToHash ("neigh"), true);
+		}
+	}
+
+	IEnumerator TimeToJump(){
+		horseAnimator.SetBool (Animator.StringToHash ("neigh"), false);
+		yield return new WaitForSeconds(1.5f);
+		if (riderController != null && !riderController.Dead){
+			riderController.Jump ();
+		}
+	}
+
+	void BeenFound(bool flag){
+		if (beenFound == flag)
+			return;
+		beenFound = flag;
+		//if (beenFound){
+			AddHorseCanvas ();
+			horseAnimator.SetBool (Animator.StringToHash ("found"), flag);
+		//}
+	}
+
+	void AddHorseCanvas(){
+		if(horseCanvas == null){
+			GameObject canvas = Instantiate (HorseCanvasPrefab);
+			horseCanvas = canvas;
+			horseAnimator = canvas.GetComponent<Animator> ();
+			canvas.transform.SetParent (gameObject.transform);
+			canvas.transform.localPosition = Vector3.zero;
+		}
 	}
 }

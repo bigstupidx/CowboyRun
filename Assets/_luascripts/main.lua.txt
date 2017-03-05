@@ -1,0 +1,3 @@
+﻿xlua.hotfix(CS.GameManager, 'PlayGameOverAnim', function(self)
+	self.animator:SetBool (CS.UnityEngine.Animator.StringToHash ('GameOver2'), true);
+end);

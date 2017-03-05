@@ -1,37 +1,19 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class RideRunGameData : Singleton<RideRunGameData>
 {
-    private bool isgameover;
-    public bool IsGameOver
+    private bool isUpdated;
+    public bool IsUpdated
     {
         get
         {
-            return isgameover;
+			return isUpdated;
         }
         set
         {
-            isgameover = value;
+			isUpdated = value;
         }
     }
-
-	public ArrayList horseVect = new ArrayList ();
-
-	public ArrayList GetHorses(){
-		return horseVect;
-	}
-
-	public void AddHorse(GameObject horse){
-		if (horse != null) {
-			horseVect.Add (horse);
-		}
-
-	}
-
-	public void RemoveHorse(GameObject horse){
-		if (horse != null) {
-			horseVect.Remove (horse);
-		}
-	}
 }
